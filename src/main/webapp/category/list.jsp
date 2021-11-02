@@ -22,11 +22,14 @@
 </header>
 <main>
     <div class="container">
+        <a href="CategoryController" class="btn btn-sm btn-primary">Category</a>
+        <a href="ProductController" class="btn btn-sm btn-info">Product</a>
+
         <h2>List Category</h2>
 
-        <form action="store" method="post">
+        <form action="CategoryController?action=search" method="post">
             <div class="mb-3 form-group">
-                <input class="form-control" type="text" name="name" id="name" placeholder="Search category..."
+                <input class="form-control" type="text" name="Keyword" id="Keyword" placeholder="Search category..."
                        value="${search}">
             </div>
             <div class="mb-3 form-group">

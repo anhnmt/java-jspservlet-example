@@ -1,8 +1,8 @@
 package com.example.session11.dao.impl;
 
 import com.example.session11.dao.ICategory;
-import com.example.session11.util.DbUtils;
 import com.example.session11.entity.Category;
+import com.example.session11.util.DbUtils;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

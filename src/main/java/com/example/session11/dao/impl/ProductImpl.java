@@ -82,6 +82,43 @@ public class ProductImpl implements IProduct {
     }
 
     @Override
+    public List<Product> findByIdOrName(String name) {
+        List<Product> list = new ArrayList<>();
+
+        Connection con;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        con = DbUtils.openConnection();
+        try {
+            pstmt = con.prepareStatement("select * from products where (ProName like ? or ProId = ?) and Status = 1");
+            pstmt.setNString(1, "%" + name + "%");
+            pstmt.setNString(2, name);
+            rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Product c = new Product(
+                        rs.getInt("ProId"),
+                        rs.getNString("ProName"),
+                        rs.getInt("CateId"),
+                        rs.getNString("Producer"),
+                        rs.getInt("YearMaking"),
+                        LocalDate.parse(rs.getString("ExpireDate")),
+                        rs.getInt("Quantity"),
+                        rs.getDouble("Price"),
+                        rs.getInt("Status")
+                );
+                list.add(c);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        } finally {
+            DbUtils.closeAll(con, pstmt, rs);
+        }
+
+        return list;
+    }
+
+    @Override
     public boolean create(Product c) {
         boolean result = false;
 

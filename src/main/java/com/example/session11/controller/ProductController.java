@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 
 @WebServlet(name = "ProductController", value = "/ProductController")
 public class ProductController extends HttpServlet {
@@ -41,6 +42,9 @@ public class ProductController extends HttpServlet {
 
         try {
             switch (action) {
+                case "search":
+                    search(request, response);
+                    break;
                 case "create":
                     create(request, response);
                     break;
@@ -63,6 +67,16 @@ public class ProductController extends HttpServlet {
         } catch (SQLException ex) {
             throw new ServletException(ex);
         }
+    }
+
+    private void search(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String Keyword = request.getParameter("Keyword");
+        request.setAttribute("search", Keyword);
+
+        List<Product> list = productDAO.findByIdOrName(Keyword);
+        request.setAttribute("list", list);
+        RequestDispatcher dispatcher = request.getRequestDispatcher("product/list.jsp");
+        dispatcher.forward(request, response);
     }
 
     private void index(HttpServletRequest request, HttpServletResponse response)
@@ -95,7 +109,7 @@ public class ProductController extends HttpServlet {
     }
 
     private void store(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException {
+            throws SQLException, IOException, ServletException {
         String ProName = request.getParameter("ProName");
         Integer CateId = Integer.parseInt(request.getParameter("CateId"));
         String Producer = request.getParameter("Producer");
@@ -104,6 +118,17 @@ public class ProductController extends HttpServlet {
         Integer Quantity = Integer.parseInt(request.getParameter("Quantity"));
         Double Price = Double.parseDouble(request.getParameter("Price"));
         Integer Status = 1;
+
+        List<Product> check = productDAO.findByName(ProName);
+
+        if (check != null) {
+            if (check.stream().anyMatch(x -> Objects.equals(x.getProName(), ProName) && Objects.equals(x.getProducer(), Producer))) {
+                request.setAttribute("error", "Product already exists");
+                RequestDispatcher dispatcher = request.getRequestDispatcher("product/create.jsp");
+                dispatcher.forward(request, response);
+                return;
+            }
+        }
 
         Product product = new Product(
                 ProName,
@@ -120,7 +145,7 @@ public class ProductController extends HttpServlet {
     }
 
     private void update(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException {
+            throws SQLException, IOException, ServletException {
         Integer ProId = Integer.parseInt(request.getParameter("ProId"));
         String ProName = request.getParameter("ProName");
         Integer CateId = Integer.parseInt(request.getParameter("CateId"));
@@ -130,6 +155,17 @@ public class ProductController extends HttpServlet {
         Integer Quantity = Integer.parseInt(request.getParameter("Quantity"));
         Double Price = Double.parseDouble(request.getParameter("Price"));
         Integer Status = 1;
+
+        List<Product> check = productDAO.findByName(ProName);
+
+        if (check != null) {
+            if (check.stream().anyMatch(x -> Objects.equals(x.getProName(), ProName) && !Objects.equals(x.getProId(), ProId) && Objects.equals(x.getProducer(), Producer))) {
+                request.setAttribute("error", "Product already exists");
+                RequestDispatcher dispatcher = request.getRequestDispatcher("product/edit.jsp");
+                dispatcher.forward(request, response);
+                return;
+            }
+        }
 
         Product product = new Product(
                 ProId,

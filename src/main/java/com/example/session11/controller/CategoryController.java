@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Objects;
 
 @WebServlet(name = "CategoryController", value = "/CategoryController")
 public class CategoryController extends HttpServlet {
@@ -39,6 +40,9 @@ public class CategoryController extends HttpServlet {
 
         try {
             switch (action) {
+                case "search":
+                    search(request, response);
+                    break;
                 case "create":
                     create(request, response);
                     break;
@@ -61,6 +65,16 @@ public class CategoryController extends HttpServlet {
         } catch (SQLException ex) {
             throw new ServletException(ex);
         }
+    }
+
+    private void search(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String Keyword = request.getParameter("Keyword");
+        request.setAttribute("search", Keyword);
+
+        List<Category> list = categoryDAO.findByName(Keyword);
+        request.setAttribute("list", list);
+        RequestDispatcher dispatcher = request.getRequestDispatcher("category/list.jsp");
+        dispatcher.forward(request, response);
     }
 
     private void index(HttpServletRequest request, HttpServletResponse response)
@@ -88,35 +102,51 @@ public class CategoryController extends HttpServlet {
     }
 
     private void store(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException {
+            throws SQLException, IOException, ServletException {
         String CateName = request.getParameter("CateName");
         String Description = request.getParameter("Description");
         Integer Status = 1;
 
-        Category category = new Category(
-                CateName,
-                Description,
-                Status
-        );
-        categoryDAO.create(category);
-        response.sendRedirect("CategoryController");
+        List<Category> check = categoryDAO.findByName(CateName);
+
+        if (check == null) {
+            Category category = new Category(
+                    CateName,
+                    Description,
+                    Status
+            );
+            categoryDAO.create(category);
+            response.sendRedirect("CategoryController");
+        } else if (check.stream().anyMatch(x -> Objects.equals(x.getCateName(), CateName))) {
+            request.setAttribute("error", "Category already exists");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("category/create.jsp");
+            dispatcher.forward(request, response);
+        }
     }
 
     private void update(HttpServletRequest request, HttpServletResponse response)
-            throws SQLException, IOException {
+            throws SQLException, IOException, ServletException {
         Integer CateId = Integer.parseInt(request.getParameter("CateId"));
         String CateName = request.getParameter("CateName");
         String Description = request.getParameter("Description");
         Integer Status = 1;
 
-        Category category = new Category(
-                CateId,
-                CateName,
-                Description,
-                Status
-        );
-        categoryDAO.update(category);
-        response.sendRedirect("CategoryController");
+        List<Category> check = categoryDAO.findByName(CateName);
+
+        if (check == null) {
+            Category category = new Category(
+                    CateId,
+                    CateName,
+                    Description,
+                    Status
+            );
+            categoryDAO.update(category);
+            response.sendRedirect("CategoryController");
+        } else if (check.stream().anyMatch(x -> Objects.equals(x.getCateName(), CateName) && !Objects.equals(x.getCateId(), CateId))) {
+            request.setAttribute("error", "Category already exists");
+            RequestDispatcher dispatcher = request.getRequestDispatcher("category/edit.jsp");
+            dispatcher.forward(request, response);
+        }
     }
 
     private void delete(HttpServletRequest request, HttpServletResponse response)

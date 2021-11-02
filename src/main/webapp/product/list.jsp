@@ -27,9 +27,9 @@
 
         <h2>List Product</h2>
 
-        <form action="store" method="post">
+        <form action="ProductController?action=search" method="post">
             <div class="mb-3 form-group">
-                <input class="form-control" type="text" name="name" id="name" placeholder="Search category..."
+                <input class="form-control" type="text" name="Keyword" id="Keyword" placeholder="Search category..."
                        value="${search}">
             </div>
             <div class="mb-3 form-group">
